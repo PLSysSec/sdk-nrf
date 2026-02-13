@@ -6,6 +6,7 @@
 
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/printk.h>
 
 #include <nrf_rpc.h>
 
@@ -60,9 +61,10 @@ int main(void)
 
 	/* Keep simulation alive by sleeping in a loop */
 	LOG_INF("Entering main loop");
+	printk("*** MAIN LOOP STARTED - Device is ready ***\n");
 	while (1) {
 		k_sleep(K_MSEC(1000));
-		LOG_DBG("Loop iteration");
+		printk(".");  /* Print a dot every second to show device is alive */
 	}
 
 	return 0;

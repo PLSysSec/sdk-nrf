@@ -32,28 +32,20 @@ sleep 0.5
 
 echo "Starting nRF RPC server with BabbleSim..."
 cd /home/tp/ncs/v3.2.1/nrf/samples/nrf_rpc/protocols_serialization/server/build/server/zephyr
-./zephyr.exe -s=${SIM_ID} -d=${DEVICE_NUM} -uart0_pty -uart_pty_pollT=1000 &
-SERVER_PID=$!
-
-sleep 1
 
 echo ""
 echo "=== BabbleSim Running ===" 
 echo "PHY PID: ${PHY_PID}"
 echo "Monitor PID: ${MONITOR_PID}"
-echo "Server PID: ${SERVER_PID}"
 echo "Simulation ID: ${SIM_ID}"
 echo "Simulation length: 86400 seconds (24 hours simulated, ~39 seconds real time at 2200x speed)"
-echo "Pseudo-TTY should be shown in server output above"
 echo ""
 echo "To test RX, run in another terminal:"
 echo "  socat UNIX-LISTEN:/tmp/nrf_rpc_server.sock,fork /dev/pts/XX,raw,echo=0"
-echo "  printf '\\x04\\x00\\xff\\x00\\xff\\x00\\x72\\x70\\x63\\x5f\\x75\\x74\\x69\\x6c\\x73' | socat - UNIX-CONNECT:/tmp/nrf_rpc_server.sock"
+echo "  printf '\\x04\\x00\\xff\\x00\\xff\\x00\\x62\\x74\\x5f\\x72\\x70\\x63' | socat - UNIX-CONNECT:/tmp/nrf_rpc_server.sock"
 echo ""
-echo "Waiting for server process to complete..."
+echo "Starting device (Press Ctrl+C to stop)..."
+echo ""
 
-# Wait for server to exit
-wait ${SERVER_PID}
-SERVER_EXIT=$?
-echo ""
-echo "Server exited with code: ${SERVER_EXIT}"
+# Run in foreground to see all output
+./zephyr.exe -s=${SIM_ID} -d=${DEVICE_NUM} -uart0_pty -uart_pty_pollT=1000
