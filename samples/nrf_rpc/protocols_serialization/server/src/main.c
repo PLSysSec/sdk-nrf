@@ -50,11 +50,20 @@ int main(void)
 
 	ret = nrf_rpc_init(err_handler);
 
+	LOG_INF("nrf_rpc_init returned: %d", ret);
+
 	if (ret != 0) {
 		LOG_ERR("RPC init failed");
 	}
 
 	LOG_INF("RPC server ready");
+
+	/* Keep simulation alive by sleeping in a loop */
+	LOG_INF("Entering main loop");
+	while (1) {
+		k_sleep(K_MSEC(1000));
+		LOG_DBG("Loop iteration");
+	}
 
 	return 0;
 }
