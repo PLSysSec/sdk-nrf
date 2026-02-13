@@ -403,3 +403,80 @@ This sample uses the following `sdk-nrfxlib`_ libraries:
 
 * :ref:`nrfxlib:nrf_rpc`
 * :ref:`nrfxlib:nfc_api_type2`
+
+Server Simulation Guide and Setup
+*********************************
+This runs the nrf_rpc ble server implementation on your laptop. 
+
+Requirements:
+- West
+- BabbleSim
+- socat
+ 
+West can be installed via: `pip3 install west` (perhaps best in venv).
+
+BabbleSim mocks up the nrf hardware on your laptop. To set this up, follow (this guide)[https://docs.zephyrproject.org/latest/boards/native/nrf_bsim/doc/nrf52_bsim.html].
+You may not need to export the variables at the end of the above guide. Test it is working with:
+
+```
+$ west build -b nrf52_bsim samples/hello_world
+$ ./build/zephyr/zephyr.exe -nosim
+Press Ctrl+C to exit
+```
+
+Socat is a tool that forwards our bytestream to our posix socket (allowing simulated insulin pump soc to communicate with simulated ble stack soc).
+
+Build the server binary:
+```
+# command executed in server directory
+west build --build-dir build . --board nrf52_bsim -- -DCONF_FILE="prj_native_sim.conf"
+```
+
+Now you need to run the generated executable. We need to pass some args and setup the simulator
+so we have a commmand `./run_bsim.sh`
+
+This will give output of the form:
+
+```
+Starting BabbleSim PHY simulator...
+Starting time monitor device...
+Starting nRF RPC server with BabbleSim...
+
+=== BabbleSim Running ===
+PHY PID: 26115
+Monitor PID: 26119
+Simulation ID: nrf_rpc_test
+Simulation length: 86400 seconds (24 hours simulated, ~39 seconds real time at 2200x speed)
+
+To test RX, run in another terminal:
+  socat UNIX-LISTEN:/tmp/nrf_rpc_server.sock,fork /dev/pts/XX,raw,echo=0
+  printf '\x04\x00\xff\x00\xff\x00\x62\x74\x5f\x72\x70\x63' | socat - UNIX-CONNECT:/tmp/nrf_rpc_server.sock
+
+Starting device (Press Ctrl+C to stop)...
+
+d_00: @00:00:00.000000  UART 0 (UARTE0) connected to pseudotty: /dev/pts/4
+d_00: @00:00:00.000000  *** Booting nRF Connect SDK v3.2.1-77c5ea27ba7d ***
+d_00: @00:00:00.000000  *** Using Zephyr OS v4.2.99-ec78104f1569 ***
+d_00: @00:00:00.000000  [00:00:00.000,000] <inf> nrf_ps_server: Initializing RPC server
+d_00: @00:00:00.000000  [00:00:00.000,000] <dbg> NRF_RPC: Initializing nRF RPC module
+d_00: @00:00:00.000000  [00:00:00.000,000] <dbg> NRF_RPC: Group 'bt_rpc' has id 0
+d_00: @00:00:00.000000  [00:00:00.000,000] <dbg> NRF_RPC: Group 'rpc_utils' has id 1
+d_00: @00:00:00.000000  [00:00:00.000,000] <dbg> NRF_RPC: Done initializing nRF RPC module
+d_00: @00:00:00.000000  [00:00:00.000,000] <dbg> nrf_rpc_uart: init called
+d_00: @00:00:00.000000  [00:00:00.000,000] <dbg> nrf_rpc_uart: <<< TX packet 0c1a
+d_00: @00:00:00.000000                                         04 00 ff 00 ff 00 62 74  5f 72 70 63             |......bt _rpc    
+d_00: @00:00:00.001350  [00:00:00.001,342] <dbg> nrf_rpc_uart: <<< TX packet 4251
+d_00: @00:00:00.001350                                         04 00 ff 01 ff 00 72 70  63 5f 75 74 69 6c 73    |......rp c_utils 
+```
+
+Now we need to map our pseudotty to a posix socket using socat. You will need to check what /dev/ptys/XX
+you are attached to. For the above output: we see `UART 0 (UARTE0) connected to pseudotty: /dev/pts/4`
+
+Using this run (no output expected):
+```
+socat UNIX-LISTEN:/tmp/nrf_rpc_server.sock,fork,reuseaddr /dev/pts/XX,raw,echo=0
+```
+
+Finally, we now send data to the socket using `./test_rpc.sh`. 
+
+
