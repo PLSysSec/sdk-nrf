@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "server",
+			"path": "../../server"
+		}
+	],
+	"settings": {
+		"nrf-connect.applications": [
+			"${workspaceFolder:server}"
+		]
+	}
+}

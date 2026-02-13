@@ -1,0 +1,9 @@
+/ {
+	chosen {
+		nordic,rpc-uart = &uart0;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};

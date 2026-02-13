@@ -1,0 +1,49 @@
+/* Copyright (c) 2024 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/ {
+	chosen {
+		/delete-property/ nordic,rpc-uart;
+		zephyr,ipc_shm = &ipc_shm0;
+	};
+
+	ipc {
+		ipc0: ipc0 {
+			compatible = "zephyr,ipc-icmsg";
+			tx-region = <&ipc_shm0>;
+			rx-region = <&ipc_shm0>;
+			mboxes = <&mbox 0>, <&mbox 1>;
+			mbox-names = "tx", "rx";
+			status = "okay";
+		};
+	};
+
+	soc {
+		mbox: mbox {
+			compatible = "zephyr,mbox-nrf-ipc-icmsg";
+			#mbox-cells = <1>;
+			status = "okay";
+		};
+	};
+
+	ipc_shm0: memory@20070000 {
+		compatible = "mmio-sram";
+		reg = <0x20070000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		tx: memory@20070000 {
+			reg = <0x20070000 0x8000>;
+		};
+
+		rx: memory@20078000 {
+			reg = <0x20078000 0x8000>;
+		};
+	};
+};
+
+&ipc0 {
+	status = "okay";
+};
