@@ -1,0 +1,7 @@
+/ {
+    chosen {
+        nordic,rpc-uart = &uart0;   /* Required for NRF_RPC_UART_TRANSPORT */
+        zephyr,console = &uart0;    /* Optional but recommended for logging */
+    };
+};
+
