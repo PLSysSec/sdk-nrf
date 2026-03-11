@@ -99,7 +99,6 @@ static void recycled_cb(void)
 BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected = connected,
 	.disconnected = disconnected,
-	.security_changed = security_changed,
 	.recycled = recycled_cb,
 };
 
@@ -147,7 +146,7 @@ int main(void)
 
 	printk("Starting Bluetooth Peripheral CGM sample\n");
 
-	bt_conn_auth_cb_register(&auth_cb_display);
+	//bt_conn_auth_cb_register(&auth_cb_display);
 
 	err = bt_enable(NULL);
 	if (err) {
