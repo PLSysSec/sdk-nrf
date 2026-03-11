@@ -301,9 +301,24 @@ static void gatt_discover(struct bt_conn *conn)
 	}
 }
 
+static void security_changed(struct bt_conn *conn, bt_security_t level,
+			     enum bt_security_err err)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	if (!err) {
+		printk("Security changed: %s level %u\n", addr, level);
+	} else {
+		printk("Security failed: %s level %u err %d\n", addr, level, err);
+	}
+}
+
 static void connected(struct bt_conn *conn, uint8_t conn_err)
 {
 	char addr[BT_ADDR_LE_STR_LEN];
+	int err;
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
@@ -321,6 +336,7 @@ static void connected(struct bt_conn *conn, uint8_t conn_err)
 	printk("Connected: %s\n", addr);
 
 	if (conn == default_conn) {
+		/* Don't manually set security - let GATT operations trigger it */
 		gatt_discover(conn);
 	}
 }
@@ -350,9 +366,46 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	bt_scan_start(BT_SCAN_TYPE_SCAN_ACTIVE);
 }
 
+static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	printk("Passkey for %s: %06u (displaying for Numeric Comparison)\n", addr, passkey);
+}
+
+static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	printk("Passkey for %s: %06u (auto-confirming)\n", addr, passkey);
+
+	/* Automatically confirm passkey */
+	bt_conn_auth_passkey_confirm(conn);
+}
+
+static void auth_cancel(struct bt_conn *conn)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	printk("Pairing cancelled: %s\n", addr);
+}
+
 BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected = connected,
 	.disconnected = disconnected,
+	.security_changed = security_changed,
+};
+
+static struct bt_conn_auth_cb conn_auth_callbacks = {
+	.passkey_display = auth_passkey_display,
+	.passkey_confirm = auth_passkey_confirm,
+	.cancel = auth_cancel,
 };
 
 static int scan_init(void)
@@ -393,6 +446,8 @@ int main(void)
 	}
 
 	printk("Bluetooth initialized\n");
+
+	bt_conn_auth_cb_register(&conn_auth_callbacks);
 
 	err = scan_init();
 	if (err) {

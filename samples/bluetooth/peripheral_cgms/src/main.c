@@ -99,6 +99,7 @@ static void recycled_cb(void)
 BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected = connected,
 	.disconnected = disconnected,
+	.security_changed = security_changed,
 	.recycled = recycled_cb,
 };
 
@@ -113,12 +114,29 @@ static void auth_cancel(struct bt_conn *conn)
 
 static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
 {
-	printk("Pairing key is %06d.\n", passkey);
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	printk("Passkey for %s: %06u (displaying for Numeric Comparison)\n", addr, passkey);
+}
+
+static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	printk("Passkey for %s: %06u (auto-confirming)\n", addr, passkey);
+
+	/* Automatically confirm passkey */
+	bt_conn_auth_passkey_confirm(conn);
 }
 
 static struct bt_conn_auth_cb auth_cb_display = {
 	.cancel = auth_cancel,
 	.passkey_display = auth_passkey_display,
+	.passkey_confirm = auth_passkey_confirm,
 };
 
 static void cgms_session_state_changed(const bool state)
@@ -146,7 +164,7 @@ int main(void)
 
 	printk("Starting Bluetooth Peripheral CGM sample\n");
 
-	//bt_conn_auth_cb_register(&auth_cb_display);
+	bt_conn_auth_cb_register(&auth_cb_display);
 
 	err = bt_enable(NULL);
 	if (err) {
