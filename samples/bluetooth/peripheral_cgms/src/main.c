@@ -152,7 +152,7 @@ static void cgms_session_state_changed(const bool state)
 int main(void)
 {
 	int err;
-	const uint8_t measurement_interval = 1; /* time in minutes. */
+	const uint8_t measurement_interval = 5; /* time in seconds. */
 	/* The time it will try to submit a record if last attempt fails. */
 	const uint8_t retry_count = 3;
 	/* The time interval between two attempts. Unit is second. */
@@ -225,6 +225,6 @@ int main(void)
 			}
 		}
 		/* Sleep until next sampling time arrives. */
-		k_sleep(K_MINUTES(measurement_interval));
+		k_sleep(K_SECONDS(measurement_interval));
 	}
 }

@@ -110,8 +110,8 @@ static uint8_t notify_cgm_measurement_cb(struct bt_conn *conn,
 	/* Extract time offset */
 	uint16_t time_offset = meas_data[4] | (meas_data[5] << 8);
 	
-	printk("Glucose notification: %.1f mg/dL (time offset: %u min, flags: 0x%02x)\n",
-	       glucose_value, time_offset, flags);
+	printk("Glucose notification: %d.%01d mg/dL (time offset: %u secs, flags: 0x%02x)\n",
+	       (int)glucose_value, (int)(glucose_value * 10) % 10, time_offset, flags);
 
 	return BT_GATT_ITER_CONTINUE;
 }
